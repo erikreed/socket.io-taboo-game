@@ -1,0 +1,115 @@
+@import 'nib'
+
+#chat
+  position relative
+  border 1px solid #ccc
+  margin 3px
+  height auto
+  width auto
+body
+  margin 0
+  padding 0
+#nickname, #connecting
+  background #fff
+  text-align center
+  font 15px Georgia
+  color #666
+  display block
+
+#nickname
+  input
+    border 1px solid #ccc
+    padding 10px
+    &:focus
+      border-color #999
+      outline 0
+  #nickname-err
+    color darkred
+    font-size 12px
+
+.connected
+  #connecting
+    display none
+
+#messages
+  background #eee
+  em
+    text-shadow 0 1px 0 #fff
+    color #999
+  p
+    padding 0
+    margin 0
+    font 12px Helvetica, Arial
+    padding 5px 10px
+    b
+      display inline-block
+      padding-right 10px
+  #nicknames, #info
+    background #ccc
+    padding 2px 4px 4px
+    font 11px Helvetica
+    span
+      color black
+    b, .giver, .giverscore
+      display inline-block
+      color #fff
+      background #999
+      padding 3px 6px
+      margin-right 5px
+      border-radius 10px
+      text-shadow 0 1px 0 #666
+    .giver
+      background #2E70C4
+      font-weight bolder
+    .giverscore
+      background none
+      color yellow
+    #seconds
+      color black
+      font-style italic
+    #word
+      font-weight bold
+  #header,#lines
+    overflow auto
+    overflow-x hidden
+    overflow-y auto
+    &::-webkit-scrollbar
+      width 1em
+      height 1em
+    &::-webkit-scrollbar-button:start:decrement, ::-webkit-scrollbar-button:end:increment
+      display block
+      height 200em
+    &::-webkit-scrollbar-button:vertical:increment
+      background-color white
+    &::-webkit-scrollbar-track-piece
+      background-color white
+      -webkit-border-radius 3px
+    &::-webkit-scrollbar-thumb:vertical
+      height 50px
+      background-color #999
+      -webkit-border-radius 3px
+    &::-webkit-scrollbar-thumb:horizontal
+      width 50px
+      background-color #999
+      -webkit-border-radius 3px
+  #header
+    max-height 8em
+    border-bottom solid #999 1px
+  #lines
+    height 7em
+
+#send-message
+  background #fff
+  position relative
+  input
+    border none
+    padding 0
+    width 80%
+    padding-right 0
+    vertical-align middle
+    &:focus
+      outline 0
+  button
+    float right
+button
+  download-button()

@@ -1,0 +1,183 @@
+doctype 5
+html
+  head
+    title Taboo -- Erik Reed
+    link(href='/stylesheets/style.css', rel='stylesheet')
+    meta(name='viewport', content='width=device-width; initial-scale=1.0;')
+    script(src='http://code.jquery.com/jquery-1.6.1.min.js')
+    script(src='/socket.io/socket.io.js')
+    script
+      var socket = io.connect();
+      var giver = null;
+      var scores = {};
+      var nicknames = null;
+
+      function update() {
+        if (giver === $('#nick').val())
+          $('#button').text('Hint');
+        else {
+          $('#card').fadeOut(350);
+          if (giver)
+            $('#button').text('Guess');
+          else
+            $('#button').text('Send');
+        }
+        $('#giver').empty();
+        if (giver) {
+          $('#giver').append('Current giver: ');
+          $('#giver').append($('<span class="giver">').text(giver));
+        }
+        else
+          $('#giver').text('Game not in play.');
+        $('#nicknames').empty().append($('<span>Scores: </span>'));
+        for (var name in scores) {
+          var div = $('<span>');
+          if (name === giver)
+            div.append($('<span class="giver">').text(name
+              + ' '));
+          else
+            div.append($('<b>').text(name));
+          div.children().last().append($('<span class="giverscore">').text(
+              '' + scores[name]));
+          $('#nicknames').append(div);
+        }
+      }
+
+      socket.on('giver', function(newGiver) {
+        giver = newGiver;
+        update();
+      });
+
+      socket.on('scores', function(newScores) {
+        scores = newScores;
+        update();
+      });
+
+      socket.on('connect', function () {
+        $('#chat').addClass('connected');
+      });
+      
+      function countdownTimer(sec) {
+        if (sec <= 0) {
+          $('#seconds').fadeOut(250);
+          $('#taboo').parent().fadeOut(250);
+          return;
+        }
+        $('#seconds').text('Seconds left: ' + --sec);
+        $('#seconds').fadeOut(70, function() {
+          $('#seconds').fadeIn(70, function() {
+             setTimeout(function() {
+               countdownTimer(sec);
+             }, 860);
+          });
+        });
+      }
+
+      socket.on('card', function (card) {
+        $('#taboo').parent().show();
+        $('#word').text(card[0]);
+        var taboo = card[1];
+        $('#taboo').empty();
+        $('#seconds').empty().hide();
+        for (var i in taboo) {
+          $('#taboo').append($('<span class="taboo">').text(taboo[i]));
+          if (i != taboo.length-1)
+            $('#taboo').append($('<span class="taboo_delim">').text(' | '));
+        }
+        $('#card').fadeIn(350, function() {
+          countdownTimer(6);
+        });
+      });
+
+      socket.on('announcement', function (msg) {
+        $('#lines').append($('<p>').append($('<em>').text(msg)));
+        $('#lines').get(0).scrollTop = 10000000;
+      });
+
+      socket.on('nicknames', function (newNicknames) {
+        nicknames = newNicknames;
+        update();
+      });
+
+      socket.on('user message', message);
+      socket.on('reconnect', function () {
+        $('#lines').remove();
+        message('System', 'Reconnected to the server');
+      });
+
+      socket.on('reconnecting', function () {
+        message('System', 'Attempting to re-connect to the server');
+      });
+
+      socket.on('error', function (e) {
+        message('System', e ? e : 'An unknown error occurred');
+      });
+
+      function message (from, msg) {
+        $('#lines').append($('<p>').append($('<b>').text(from), msg));
+        $('#lines').get(0).scrollTop = 10000000;
+      }
+
+      $(function () {
+        $('#set-nickname').submit(function (ev) {
+          var nick = $('#nick').val();
+          socket.emit('nickname', nick, function (set) {
+            if (!set) {
+              clear();
+              socket.emit('giver', nick);
+              socket.emit('scores', nick);
+              $('#nickname-err').remove();
+              $('.connect').fadeOut(150, function() {
+                $('.content').fadeIn(150);
+                $('#nickname').remove();
+              });
+              return;
+            }
+            $('#nickname-err').show();
+          });
+          return false;
+        });
+        $('#enter').click(function() {
+          $('#set-nickname').submit();
+        });
+        $('#send-message').submit(function () {
+          message('me', $('#message').val());
+          socket.emit('user message', $('#message').val());
+          clear();
+          $('#lines').get(0).scrollTop = 10000000;
+          return false;
+        });
+
+        function clear () {
+          $('#message').val('').focus();
+        };
+        $('#nickname-err').hide();
+        $('#card').hide();
+        $('.content').hide();
+      });
+  body
+    #chat
+      #nickname.connect
+        form.wrap#set-nickname
+          h3 Welcome to Taboo!
+          p Please type in your nickname.
+          input#nick
+          p
+            button#enter Submit
+          p#nickname-err Nickname already in use
+      #messages.content
+        #header
+          p#nicknames
+          #info
+            #giver
+            #scores
+            #card
+              p Word: 
+                span#word
+              p Taboo: 
+                span#taboo
+              p#seconds
+        #lines
+      form#send-message.content
+        input#message
+        button#button Send
